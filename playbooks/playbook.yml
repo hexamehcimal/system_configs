@@ -37,7 +37,7 @@
         remote_src: true
 
     - name: Open ports
-      ansible.builtin.command: ufw allow 10250,10256,30000:32767/tcp
+      ansible.builtin.command: ufw allow 6443,2379:2380,10259,10250,10256,30000:32767/tcp
 
 
     - name: Containerd config directory
@@ -51,9 +51,16 @@
     - name: Set Containerd to use systemd Cgroup
       ansible.builtin.lineinfile:
         path: /etc/containerd/config.toml
-        search_string: 'SystemdCgroup = false'
+        regexp: 'SystemdCgroup = false'
         line: '            SystemdCgroup = true'
-   
+
+    - name: Set Containerd to use new sandbox
+      ansible.builtin.replace:
+        path: /etc/containerd/config.toml
+        regexp: 'registry.k8s.io/pause:3.8'
+        replace: 'registry.k8s.io/pause:3.9'
+
+                 
     - ansible.builtin.command: systemctl restart containerd
 
     - name: Install kubernetes gpg key
