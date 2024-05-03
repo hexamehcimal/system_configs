@@ -13,32 +13,32 @@
           - curl
           - gpg
           - net-tools
-    
-    - name: Download runc
-      ansible.builtin.get_url:
-        url: https://github.com/opencontainers/runc/releases/download/v1.1.12/runc.amd64
-        dest: /usr/local/bin/runc
-        mode: '0777'
-    
-    - name: Download CNI Plugin
-      ansible.builtin.get_url:
-        url: https://github.com/containernetworking/plugins/releases/download/v1.4.1/cni-plugins-linux-amd64-v1.4.1.tgz
-        dest: /tmp/cni-plugins.tgz
+          - wget
+          - vim
 
-    
-    - name: Extract CNI plugin
-      ansible.builtin.file:
-        path: /opt/cni/bin
-        state: directory
+    # - name: Download runc
+    #   ansible.builtin.get_url:
+    #     url: https://github.com/opencontainers/runc/releases/download/v1.1.12/runc.amd64
+    #     dest: /usr/local/bin/runc
+    #     mode: '0777'
 
-    - ansible.builtin.unarchive:
-        src: /tmp/cni-plugins.tgz
-        dest: /opt/cni/bin
-        remote_src: true
+    # - name: Download CNI Plugin
+    #   ansible.builtin.get_url:
+    #     url: https://github.com/containernetworking/plugins/releases/download/v1.4.1/cni-plugins-linux-amd64-v1.4.1.tgz
+    #     dest: /tmp/cni-plugins.tgz
 
-    - name: Disable firewall
-      ansible.builtin.command: ufw disable
+    # - name: Extract CNI plugin
+    #   ansible.builtin.file:
+    #     path: /opt/cni/bin
+    #     state: directory
 
+    # - ansible.builtin.unarchive:
+    #     src: /tmp/cni-plugins.tgz
+    #     dest: /opt/cni/bin
+    #     remote_src: true
+
+    # - name: Disable firewall
+    #   ansible.builtin.command: ufw disable
 
     - name: Containerd config directory
       ansible.builtin.file:
@@ -49,36 +49,34 @@
       ansible.builtin.shell: containerd config default > /etc/containerd/config.toml
 
     - name: Set Containerd to use systemd Cgroup
-      ansible.builtin.lineinfile:
+      ansible.builtin.replace:
         path: /etc/containerd/config.toml
-        regexp: 'SystemdCgroup = false'
-        line: '            SystemdCgroup = true'
+        regexp: "SystemdCgroup = false"
+        replace: "SystemdCgroup = true"
+        # line: "            SystemdCgroup = true"
 
     - name: Set Containerd to use new sandbox
       ansible.builtin.replace:
         path: /etc/containerd/config.toml
-        regexp: 'registry.k8s.io/pause:3.8'
-        replace: 'registry.k8s.io/pause:3.9'
+        regexp: "registry.k8s.io/pause:3.8"
+        replace: "registry.k8s.io/pause:3.9"
 
-                 
     - ansible.builtin.command: systemctl restart containerd
 
     - name: Install kubernetes gpg key
       ansible.builtin.get_url:
         url: https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key
         dest: /tmp/kuberneteskey
-        checksum: sha256:5fe267a9ae47ffd566624057f2c8f64ab8a786a9c650e92cc22135381b04f12b 
-         
+        checksum: sha256:5fe267a9ae47ffd566624057f2c8f64ab8a786a9c650e92cc22135381b04f12b
+
     - ansible.builtin.shell: cat /tmp/kuberneteskey | gpg --batch --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
-
     - name: Add Kubernetes Repo
-      ansible.builtin.apt_repository: 
-        repo: 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /'
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /"
         filename: kubernetes.list
 
-
-    - name: Install Kubernetes 
+    - name: Install Kubernetes
       ansible.builtin.apt:
         update_cache: true
         pkg:
@@ -88,6 +86,16 @@
 
     - name: Disable swap
       ansible.builtin.command: swapoff -a
+
+    - name: Disable swap fstab
+      ansible.builtin.command: sed -i '/swap/s/^/#/' /etc/fstab
+
+    # Selinux not available on ubuntu 22.04 server minimal image?
+    # - name: Disable selinux
+    #   ansible.builtin.command: setenforce 0
+
+    # - name: Make selinux disabled persistent over reboot
+    #   ansible.builtin.command: sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
 
     - name: Add kubenernetes network modules
       ansible.builtin.blockinfile:
