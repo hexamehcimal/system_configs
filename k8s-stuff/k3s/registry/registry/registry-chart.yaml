@@ -1,0 +1,27 @@
+---
+replicaCount: 1
+persistence:
+  enabled: true
+  size: 10Gi
+  deleteEnabled: true
+  storageClass: ""
+  existingClaim: docker-registry-pvc
+secrets:
+  htpasswd: sysint:$2y$05$SNyRJNbphOOoD2kDbgUKSuoPxS1mW8TyiayrFM3Rm8b2dRqLQlsW2
+#ingress:
+#  enabled: false
+#  className: traefik
+#  path: /
+#  # Used to create an Ingress record.
+#  hosts:
+#    - registry.local.lan
+#  annotations: {}
+#    # kubernetes.io/ingress.class: nginx
+#    # kubernetes.io/tls-acme: "true"
+#  labels: {}
+#  tls:
+#     # Secrets must be manually created in the namespace.
+#     - secretName: certs-secret
+#       hosts:
+#         - registry.local.lan
+#
