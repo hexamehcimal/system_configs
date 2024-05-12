@@ -1,0 +1,11 @@
+---
+- name: Install step-cli
+  hosts: all
+  tasks:
+    - name: Download step cli
+      ansible.builtin.get_url:
+        url: https://dl.smallstep.com/cli/docs-cli-install/latest/step-cli_amd64.deb
+        dest: /tmp/
+
+    - name: install step cli
+      ansible.builtin.command: dpkg -i /tmp/step-cli_amd64.deb
