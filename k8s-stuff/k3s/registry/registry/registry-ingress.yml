@@ -4,16 +4,16 @@ metadata:
   name: registry-ingress
   namespace: docker-registry
   annotations:
-        traefik.ingress.kubernetes.io/router.entrypoints: registry,websecure,web
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure,web
+          #traefik.ingress.kubernetes.io/router.entrypoints: registry,websecure,web
         traefik.ingress.kubernetes.io/router.tls: "true"
-
   labels:
     app: registry
 spec:
   tls:
   - hosts:
       - registry.local.lan
-    secretName: cert-secret
+    secretName: certs-secret
   rules:
     - host: registry.local.lan
       http:
