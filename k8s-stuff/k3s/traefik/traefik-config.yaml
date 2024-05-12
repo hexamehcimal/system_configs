@@ -1,0 +1,17 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    service:
+      externalIPs:
+        - 192.168.86.18
+    ports:
+      registry:
+        port: 5000
+        exposed: true
+        exposedPort: 5000
+    additionalArguments:
+      - "--entryPoints.registry.address=:5000/tcp"
